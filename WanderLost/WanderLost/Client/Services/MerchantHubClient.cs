@@ -1,11 +1,14 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
 using WanderLost.Shared.Data;
 using WanderLost.Shared.Interfaces;
+using HubClientSourceGenerator;
 
 namespace WanderLost.Client.Services
 {
     //Implements client for incoming calls, and server to act as a proxy for outgoing calls
-    public class MerchantHubClient : IMerchantHubServer, IMerchantHubClient, IAsyncDisposable
+    [AutoHubClient(typeof(IMerchantHubClient))]
+    //[AutoHubClient(typeof(IMerchantHubClient))]
+    public partial class MerchantHubClient : IMerchantHubServer, IAsyncDisposable
     {
         public HubConnection HubConnection {get; init; }
 
@@ -50,20 +53,9 @@ namespace WanderLost.Client.Services
             await HubConnection.SendAsync(nameof(UpdateMerchant), server, merchant);
         }
 
-        Task IMerchantHubClient.UpdateMerchantGroup(string server, ActiveMerchantGroup merchantGroup)
-        {
-            //Not a callable server method
-            throw new NotImplementedException();
-        }
-
         public IDisposable OnUpdateMerchant(Action<string, ActiveMerchant> action)
         {
             return HubConnection.On(nameof(UpdateMerchant), action);
-        }
-
-        public IDisposable OnUpdateMerchantGroup(Action<string, ActiveMerchantGroup> action)
-        {
-            return HubConnection.On(nameof(IMerchantHubClient.UpdateMerchantGroup), action);
         }
 
         public async Task<IEnumerable<ActiveMerchantGroup>> GetKnownActiveMerchantGroups(string server)
@@ -74,20 +66,6 @@ namespace WanderLost.Client.Services
         public async Task Vote(string server, Guid merchantId, VoteType voteType)
         {
             await HubConnection.SendAsync(nameof(Vote), server, merchantId, voteType);
-        }
-
-        public Task UpdateVoteTotal(Guid merchantId, int voteTotal)
-        {
-            //Todo: Maybe this class should be constructed by a code generator so we don't need these sorts of methods
-            //There's a repeated pattern of an "On" method for server calls, and a SendAsync/InvokeAsync for client calls
-            throw new NotImplementedException();
-        }
-
-        public delegate void UpdateVoteTotalHandler(Guid merchantId, int voteTotal);
-        public IDisposable OnUpdateVoteTotal(UpdateVoteTotalHandler handler)
-        {
-            var action = new Action<Guid, int>(handler);
-            return HubConnection.On(nameof(UpdateVoteTotal), action);
         }
     }
 }
