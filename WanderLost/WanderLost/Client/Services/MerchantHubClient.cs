@@ -1,14 +1,12 @@
 ﻿using Microsoft.AspNetCore.SignalR.Client;
-using WanderLost.Shared.Data;
 using WanderLost.Shared.Interfaces;
 using HubClientSourceGenerator;
 
 namespace WanderLost.Client.Services
 {
-    //Implements client for incoming calls, and server to act as a proxy for outgoing calls
     [AutoHubClient(typeof(IMerchantHubClient))]
-    //[AutoHubClient(typeof(IMerchantHubClient))]
-    public partial class MerchantHubClient : IMerchantHubServer, IAsyncDisposable
+    [AutoHubServer(typeof(IMerchantHubServer))]
+    public partial class MerchantHubClient : IAsyncDisposable
     {
         public HubConnection HubConnection {get; init; }
 
@@ -36,31 +34,6 @@ namespace WanderLost.Client.Services
                 await HubConnection.DisposeAsync();
             }
             GC.SuppressFinalize(this);
-        }
-
-        public async Task SubscribeToServer(string server)
-        {
-            await HubConnection.SendAsync(nameof(SubscribeToServer), server);
-        }
-
-        public async Task UnsubscribeFromServer(string server)
-        {
-            await HubConnection.SendAsync(nameof(UnsubscribeFromServer), server);
-        }
-
-        public async Task UpdateMerchant(string server, ActiveMerchant merchant)
-        {
-            await HubConnection.SendAsync(nameof(UpdateMerchant), server, merchant);
-        }
-
-        public async Task<IEnumerable<ActiveMerchantGroup>> GetKnownActiveMerchantGroups(string server)
-        {
-            return await HubConnection.InvokeAsync<IEnumerable<ActiveMerchantGroup>>(nameof(GetKnownActiveMerchantGroups), server);
-        }
-
-        public async Task Vote(string server, Guid merchantId, VoteType voteType)
-        {
-            await HubConnection.SendAsync(nameof(Vote), server, merchantId, voteType);
         }
     }
 }
